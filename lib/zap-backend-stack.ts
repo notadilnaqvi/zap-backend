@@ -21,7 +21,7 @@ export class ZapBackendStack extends cdk.Stack {
       {
         visibilityTimeout: cdk.Duration.minutes(1),
         receiveMessageWaitTime: cdk.Duration.seconds(10),
-      }
+      },
     );
 
     // Allow Commercetools subscriptions user to send messages to our queue
@@ -61,15 +61,6 @@ export class ZapBackendStack extends cdk.Stack {
     // Make the lambda run everytime the queue reveives a new message
     sendSignUpVerificationEmailLambda.addEventSource(
       new lambdaEventSources.SqsEventSource(commercetoolsCustomerCreatedQueue),
-    );
-
-    // Allow the lambda to send emails
-    sendSignUpVerificationEmailLambda.addToRolePolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: ["ses:SendEmail", "ses:SendRawEmail"],
-        resources: ['*'],
-      }),
     );
   }
 }
