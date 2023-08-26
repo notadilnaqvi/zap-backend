@@ -1,11 +1,29 @@
-import { validatePayload } from "./utils";
 import { type SQSHandler } from "aws-lambda";
+
+import { commercetoolsFetch, validatePayload } from "./utils";
+import { type EmailVerificationToken } from "./types";
 
 export const handler: SQSHandler = async (event) => {
   try {
-    const payload = validatePayload(event?.Records[0].body);
+    const payload = validatePayload(event?.Records?.[0]?.body);
 
-    const res = await fetch("https://api.resend.com/emails", {
+    const customer = payload.customer;
+
+    const url = new URL(
+      process.env.CTP_PROJECT_KEY + "/customers/email-token",
+      process.env.CTP_API_URL,
+    );
+
+    const emailVerificationToken =
+      await commercetoolsFetch<EmailVerificationToken>(url, {
+        method: "POST",
+        body: JSON.stringify({
+          id: customer.id,
+          ttlMinutes: 24 * 60 * 3, // Make the token valid for 3 days
+        }),
+      });
+
+    const sendEmailResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -15,25 +33,26 @@ export const handler: SQSHandler = async (event) => {
         // TODO: Using Resend's testing email for now. Update this to use a
         // dedicated email address
         from: "onboarding@resend.dev",
-        to: [payload.customer.email],
+        to: [customer.email],
         subject: "Verify you email for ZAP",
-        html:
-          `<p>Hey there ${payload.customer.firstName},</p>` +
-          "<p>Welcome to ZAP!</p>" +
-          "<p>Click the link below to verify you email address</p>" +
-          '<a href="https://the-zap-store.vercel.app/">Verify your email</a>',
+        html: `<section>
+          <p>Hey ${customer.firstName},</p>
+          <p>Welcome to ZAP!</p>
+          <p>Click the following link to verify your email</p>
+          <a
+            href="http://localhost:4444/verify?tokenValue=${emailVerificationToken.value}"
+          >
+            Verify email
+          </a>
+        </section>`,
       }),
     });
 
-    if (!res.ok) {
-      throw new Error(res.statusText);
+    if (!sendEmailResponse.ok) {
+      const error = await sendEmailResponse.json();
+      throw new Error(JSON.stringify(error));
     }
   } catch (error: any) {
-    console.error(
-      "[Error] Failed to send email with the following error: ",
-      error.message || error,
-    );
+    console.error("Failed to send verification email", JSON.stringify(error));
   }
-
-  return;
 };

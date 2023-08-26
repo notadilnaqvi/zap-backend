@@ -44,6 +44,7 @@ export class ZapBackendStack extends cdk.Stack {
       "SendSignUpVerificationEmail",
       {
         retryAttempts: 0,
+        timeout: cdk.Duration.seconds(30),
         runtime: lambda.Runtime.NODEJS_18_X,
         handler: "handler",
         entry: path.join(
