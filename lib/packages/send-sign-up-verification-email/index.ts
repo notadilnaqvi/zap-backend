@@ -23,7 +23,7 @@ export const handler: SQSHandler = async (event) => {
         }),
       });
 
-    const tokenExpiry = new Date(emailVerificationToken.expiresAt).toLocaleString('en-PK') + ' (PKT)';
+    const tokenExpiry = new Date(emailVerificationToken.expiresAt).toUTCString();
 
     const sendEmailResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -46,6 +46,7 @@ export const handler: SQSHandler = async (event) => {
           >
             Verify email
           </a>
+          <br/>
           <i>This token will expire on ${tokenExpiry}</i>
         </section>`,
       }),
