@@ -23,6 +23,8 @@ export const handler: SQSHandler = async (event) => {
         }),
       });
 
+    const tokenExpiry = new Date(emailVerificationToken.expiresAt).toLocaleString('en-PK') + ' (PKT)';
+
     const sendEmailResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -40,10 +42,11 @@ export const handler: SQSHandler = async (event) => {
           <p>Welcome to ZAP!</p>
           <p>Click the following link to verify your email</p>
           <a
-            href="http://localhost:4444/verify?tokenValue=${emailVerificationToken.value}"
+            href="https://the-zap-store.vercel.app/verify?tokenValue=${emailVerificationToken.value}"
           >
             Verify email
           </a>
+          <i>This token will expire on ${tokenExpiry}</i>
         </section>`,
       }),
     });
