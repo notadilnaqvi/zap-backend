@@ -32,9 +32,7 @@ export const handler: SQSHandler = async (event) => {
         "Authorization": "Bearer " + process.env.RESEND_API_KEY,
       },
       body: JSON.stringify({
-        // TODO: Using Resend's testing email for now. Update this to use a
-        // dedicated email address
-        from: "onboarding@resend.dev",
+        from: "hello@adilnaqvi.com",
         to: [customer.email],
         subject: "Verify you email for ZAP",
         html: `<section>
